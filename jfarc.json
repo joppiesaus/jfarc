@@ -1,0 +1,12 @@
+{
+    "version": "1", 
+    "files": [
+        "index.html"
+    ], 
+    "replaceCases": [
+        "img", 
+        "dl", 
+        "lib"
+    ], 
+    "replaceWith": "/"
+}
