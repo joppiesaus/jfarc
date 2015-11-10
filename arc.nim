@@ -2,13 +2,23 @@
 import strutils, os, times, json, htmlgen
 
 let baseDir = "archive"
+let cfgName = "jfarc.json"
 let logLoc = baseDir & "/log.json"
 
-var cfg = parseJson(readFile("jfarc.json"))
+var cfg = parseJson(readFile(cfgName))
 var configChanged = false
 
-let replaceCases = cfg["replaceCases"]
-let replaceWith = cfg["replaceWith"].str
+# TODO: Create instead?
+proc getCfg(key: string, default: JsonNode): JsonNode =
+    if cfg.hasKey(key):
+        result = cfg[key]
+    else:
+        echo cfgName, ": Key \"", key, "\" doesn't exist; assuming default ", $default
+        result = default
+
+let replaceCases = getCfg("replaceCases", %*["js", "lib", "dl"])
+let replaceWith = getCfg("replaceWith", %*"/").str
+
 
 var internalVersion = getDateStr()
 
@@ -89,7 +99,16 @@ while i < params.len:
         files.add(param) #temp
     inc(i)
 
-let version = cfg["version"].str
+if cfg.hasKey("files"):
+    for glob in cfg["files"]:
+        for path in walkFiles(glob.str):
+            files.add(path)
+
+if files.len < 1:
+    echo "No input files specified; aborting"
+    quit()
+
+let version = getCfg("version", %*"1").str
 let subloc = baseDir & "/" & version
 let loc = subloc & "/" & internalVersion & "/"
 
@@ -136,7 +155,7 @@ for fileName in files:
 
 # Write to config if changed
 if configChanged:
-    writeFile("jfarc.json", pretty(cfg, 4))
+    writeFile(cfgName, pretty(cfg, 4))
 
 # Write log
 writeFile(logLoc, pretty(log, 4))
