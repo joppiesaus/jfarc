@@ -88,6 +88,8 @@ var files: seq[string]
 files = @[]
 let params = commandLineParams()
 var i = 0
+var doBuildIndex = not getCfg("no-index", %*false).bval
+
 while i < params.len:
     var param = $params[i]
     if param.startsWith("--"):
@@ -101,11 +103,14 @@ while i < params.len:
             buildIndex(parseLog())
             echo "Succesfully build archive/index.html"
             quit()
+        of "no-index":
+            doBuildIndex = false
         of "help":
             echo paramStr(0), " - archives things"
             echo "Options:"
             echo "\t--setmajorversion <version> - Sets the current major version"
             echo "\t--build-index - Rebuilds archive index file based on log.json"
+            echo "\t--no-index - Do not generate the index"
             echo "\t-name <name> - Set current archive's name"
             echo "\t-description <description> - Sets current archive's description"
             quit()
@@ -192,6 +197,7 @@ writeFile(logLoc, pretty(log, 4))
 createRedirFile(version, internalVersion)
 
 # Build the index file from the log
-buildIndex(log)
+if doBuildIndex:
+    buildIndex(log)
 
 echo "Succesfully archived to ", loc
